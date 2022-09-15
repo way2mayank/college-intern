@@ -1,6 +1,3 @@
-
-// college Controller
-
 const collegeModel = require("../model/collegeModel");
 const internModel = require("../model/internModel");
 
@@ -21,16 +18,23 @@ const isValidValue = function (value) {
   else return true;
 };
 
-
-
 const createCollege = async function (req, res) {
   try {
     let data = req.body;
     if (!isValid(data)) return res.status(400).send({ status: false, message: "Please Wrire required data to create College" });
 
-    const { name, fullName, logoLink } = req.body;
+    const { name, fullName, logoLink } = data;
 
     if (!name) return res.status(400).send({ status: false, message: "Name is required" });
+
+    function whitespace(name) {
+      return name.indexOf(" ") >= 0
+    }
+
+    if (whitespace(name)) {
+      return res.status(400).send( "Make sure college name should not have space." )
+    }
+      
 
     if (!isValidValue(name) || (!name.match(/^[ ]*[a-zA-Z][a-zA-Z\s]{0,35}[a-zA-Z][ ]*$/)))
       return res.status(400).send({ status: false, message: "Name should be in letters" });
@@ -50,6 +54,20 @@ const createCollege = async function (req, res) {
 
 
     //for check logo link we use axios
+
+    function isURL(logoLink) {
+      var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+      '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.?)+[a-z]{2,}|'+ // domain name
+      '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+      '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+      '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+      '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+      return pattern.test(str);
+    }
+
+
+
+
     let check = false;
     await axios.get(logoLink).then((response) => {
 
@@ -58,8 +76,7 @@ const createCollege = async function (req, res) {
 
       }
     })
-      //.catch((error) => { });
-
+      .catch((error) => { });
     if (check == false) return res.status(400).send({ status: false, message: "Please give valid logo link" });
 
     let checkName = await collegeModel.findOne({ name: name });
@@ -99,7 +116,7 @@ const getCollegeDetails = async function (req, res) {
     const getCollegeId = college._id;
     
     const internData = await internModel.find({ collegeId: getCollegeId, isDeleted: false })
-      .select({  });
+      .select({ name:1,email:1,mobile:1 });
 
     if (internData.length == 0)
       return res.status(400).send({ status: false, message: "No interns for this college" });
