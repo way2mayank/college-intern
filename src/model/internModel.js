@@ -1,32 +1,36 @@
-const mongoose = require('mongoose');
-const ObjectId = mongoose.Schema.Types.ObjectId
+const mongoose = require("mongoose")
 
+const ObjectId = mongoose.Schema.Types.ObjectId
 
 const internSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
-        trim : true,
+        trim: true
     },
     email: {
         type: String,
         required: true,
-        unique: true ,
+        trim: true,
+        lowercase:true,
+        unique: true
     },
     mobile: {
-        type: Number,
+        type: String,
         required: true,
-        unique: true,
+        trim: true,
+        unique: true
     },
-    collegeId:{
+    collegeId: {
         type: ObjectId,
-        ref: 'Colleges',
-        
+        ref: "College",
+        required: true,
+        trim: true
     },
     isDeleted: {
         type: Boolean,
         default: false
     }
-},{timestamps:true})
+}, { timestamps: true })
 
-module.exports = mongoose.model('Intern', internSchema)
+module.exports = mongoose.model("Intern", internSchema)
