@@ -1,6 +1,6 @@
 const collegeModel = require("../model/collegeModel");
 const internModel = require("../model/internModel");
-const axios = require("axios");
+//const axios = require("axios");
 
 
 // Validataion for empty request body
@@ -41,7 +41,7 @@ const createCollege = async function (req, res) {
 
     if (!fullName) return res.status(400).send({ status: false, message: "Full Name is required" });
 
-    if (!isValidValue(fullName) || (!fullName.match(/^[ ]*[a-zA-Z][a-zA-Z\s]{0,35}[a-zA-Z][ ]*$/)))
+    if (!isValidValue(fullName) || (!fullName.match(/^[ ]*[a-zA-Z][a-zA-Z\s]{0,135}[a-zA-Z][ ]*$/)))
         return res.status(400).send({ status: false, message: "Full Name should be in letters" });
 
 
@@ -50,25 +50,35 @@ const createCollege = async function (req, res) {
 
     if (!isValidValue(logoLink))
       return res.status(400).send({ status: false, message: "Logo link is in wrong format" });
-
+     
+    if(!logoLink.match(/^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%.\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%\+.~#?&\/=]*)$/))
+    return res.status(400).send({status:false, message:"please enter valid logoLink"})
 
     //for check logo link we use axios
 
-    let check = false;
-    await axios.get(logoLink).then((response) => {
+    // let check = false;
+    // await axios.get(logoLink).then((response) => {
 
-      if (response.status == 200 || response.status == 201) {
-        if (response.headers["content-type"].startsWith("image/")) check = true;
+    //   if (response.status == 200 || response.status == 201) {
+    //     if (response.headers["content-type"].startsWith("image/")) check = true;
 
-      }
-    })
-      .catch((error) => { });
-    if (check == false) return res.status(400).send({ status: false, message: "Please give valid logo link" });
+    //   }
+    // })
+    //   .catch((error) => { });
+    // if (check == false) return res.status(400).send({ status: false, message: "Please give valid logo link" });
+
+
 
     let checkName = await collegeModel.findOne({ name: name });
     if (checkName) return res.status(400).send({ status: false, message: "College Name is already exist" });
 
-    let college = await collegeModel.create(data);
+    let College= await collegeModel.create(data);
+    let college= {
+      name:College.name,
+      fullName:College.fullName,
+      logoLink:College.logoLink,
+      isDeleted:College.isDeleted
+    }
     return res.status(201).send({ status: true, data: college });
 
   } catch (err) {
@@ -88,16 +98,7 @@ const getCollegeDetails = async function (req, res) {
 
     if (!college) return res.status(400).send({ status: false, message: "No college found" });
 
-
-
-    // Copying name, fullName & logoLink from college to a new object collegeDetails
-    const collegeDetails = {
-      Name: college.name,
-      FullName: college.fullName,
-      LogoLink: college.logoLink,
-    };
-
-
+   
     // Extracting _id from college & using it to get interns
     const getCollegeId = college._id;
     
@@ -106,8 +107,14 @@ const getCollegeDetails = async function (req, res) {
 
     if (internData.length == 0)
       return res.status(400).send({ status: false, message: "No interns for this college" });
-    const data = { collegeDetails, interns: internData };
-
+      let collegeDetails= {
+        Name: college.name,
+        FullName: college.fullName,
+        LogoLink: college.logoLink,
+        interns:internData
+      }
+    
+      const data = { collegeDetails };
 
     return res.status(200).send({ status: true, data: data });
 
